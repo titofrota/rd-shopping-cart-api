@@ -87,28 +87,26 @@ RSpec.describe "/carts", type: :request do
         subject
         json_response = JSON.parse(response.body)
 
-        # puts json_response
-
         expect(json_response['id']).to eq(cart.id)
         expect(json_response['products'].any? { |item| item['id'] == product.id }).to be_truthy
       end
     end
   end
 
-  # describe "POST /add_items" do
-  #   let(:cart) { Cart.create }
-  #   let(:product) { Product.create(name: "Test Product", price: 10.0) }
-  #   let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+  describe "POST /add_item" do
+    # let(:cart) { Cart.create }
+    # let(:product) { Product.create(name: "Test Product", price: 10.0) }
+    let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
 
-  #   context 'when the product already is in the cart' do
-  #     subject do
-  #       post '/cart/add_items', params: { product_id: product.id, quantity: 1 }, as: :json
-  #       post '/cart/add_items', params: { product_id: product.id, quantity: 1 }, as: :json
-  #     end
+    context 'when the product already is in the cart' do
+      subject do
+        post '/cart/add_item', params: { cart: { product_id: product.id, quantity: 1 } }, as: :json
+        post '/cart/add_item', params: { cart: { product_id: product.id, quantity: 1 } }, as: :json
+      end
 
-  #     it 'updates the quantity of the existing item in the cart' do
-  #       expect { subject }.to change { cart_item.reload.quantity }.by(2)
-  #     end
-  #   end
-  # end
+      it 'updates the quantity of the existing item in the cart' do
+        expect { subject }.to change { cart_item.reload.quantity }.by(2)
+      end
+    end
+  end
 end

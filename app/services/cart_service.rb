@@ -18,6 +18,24 @@ class CartService
       nil
     end
   end
+
+  def add_item(product, quantity)
+    # if the product doesnt exists, should add_product, otherwise, should update the quantity and total_price
+    
+    cart_item = @cart.items.find_by(product: product)
+
+    if cart_item
+      cart_item.quantity = cart_item.quantity.to_i + quantity
+      cart_item.total_price = cart_item.quantity * product.price
+      cart_item.save
+
+      update_cart_total_price
+
+      cart_item
+    else
+      add_product(product, quantity)
+    end
+  end
   
 
   def cart_payload
