@@ -75,6 +75,26 @@ RSpec.describe "/carts", type: :request do
     end
   end
 
+  describe "GET /cart" do
+    context 'when the cart exists' do
+      let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+
+      subject do
+        get '/cart', as: :json
+      end
+
+      it 'returns the cart with its items' do
+        subject
+        json_response = JSON.parse(response.body)
+
+        # puts json_response
+
+        expect(json_response['id']).to eq(cart.id)
+        expect(json_response['products'].any? { |item| item['id'] == product.id }).to be_truthy
+      end
+    end
+  end
+
   # describe "POST /add_items" do
   #   let(:cart) { Cart.create }
   #   let(:product) { Product.create(name: "Test Product", price: 10.0) }
