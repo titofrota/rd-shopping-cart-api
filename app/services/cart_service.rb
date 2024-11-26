@@ -27,12 +27,14 @@ class CartService
     if cart_item
       cart_item.destroy
       update_cart_total_price
+      activate_cart_if_abandoned
+      update_last_interacted_at
       cart_item
     else
       raise ProductNotFoundError, "Product not found in the cart"
     end
   end
-  
+
   def cart_payload
     {
       id: @cart.id,
@@ -50,6 +52,8 @@ class CartService
 
     if cart_item.save
       update_cart_total_price
+      update_last_interacted_at
+      activate_cart_if_abandoned 
       cart_item
     else
       raise UnableToSaveCartItemError, "Unable to save cart item"
@@ -59,6 +63,16 @@ class CartService
   def update_cart_total_price
     @cart.total_price = @cart.items.includes(:product).sum { |item| calculate_total_price(item) }
     @cart.save
+  end
+
+  def update_last_interacted_at
+    @cart.update(last_interacted_at: Time.current)
+  end
+
+  def activate_cart_if_abandoned
+    if @cart.abandoned?
+      @cart.update(status: :active)
+    end
   end
 
   def calculate_total_price(cart_item)
