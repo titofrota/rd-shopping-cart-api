@@ -69,7 +69,7 @@ RSpec.describe "/carts", type: :request do
         subject
         json_response = JSON.parse(response.body)
 
-        expect(json_response['error']).to eq('Unable to add product to cart')
+        expect(json_response['error']).to eq('Unable to save cart item')
         expect(response.status).to eq(422)
       end
     end
@@ -113,7 +113,6 @@ RSpec.describe "/carts", type: :request do
 
     context 'when the product is in the cart' do
       subject do
-        puts cart_item.inspect
         delete "/cart/#{product.id}", as: :json
       end
 

@@ -5,11 +5,12 @@ class CartsController < ApplicationController
 
   # POST /cart
   def add_product
-    added_product = @cart_service.add_product(@product, cart_params[:quantity])
-
-    if added_product
+    begin
+      @cart_service.add_product(@product, cart_params[:quantity])
       render_cart
-    else
+    rescue CartService::UnableToSaveCartItemError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue => e
       render json: { error: 'Unable to add product to cart' }, status: :unprocessable_entity
     end
   end
@@ -25,22 +26,24 @@ class CartsController < ApplicationController
 
   # POST /cart/add_item
   def add_item
-    added_product = @cart_service.add_item(@product, cart_params[:quantity])
-
-    if added_product
+    begin
+      @cart_service.add_item(@product, cart_params[:quantity])
       render_cart
-    else
+    rescue CartService::UnableToSaveCartItemError => e
+      render json: { error: e.message }, status: :unprocessable_entity
+    rescue => e
       render json: { error: 'Unable to add item to cart' }, status: :unprocessable_entity
     end
   end
 
   # DELETE /cart/:product_id
   def remove_item
-    removed_product = @cart_service.remove_item(@product)
-
-    if removed_product
+    begin
+      @cart_service.remove_item(@product)
       render_cart
-    else
+    rescue CartService::ProductNotFoundError => e
+      render json: { error: e.message }, status: :not_found
+    rescue => e
       render json: { error: 'Unable to remove product from cart' }, status: :unprocessable_entity
     end
   end
