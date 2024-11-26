@@ -6,7 +6,7 @@ class CartItem < ApplicationRecord
   validates :unit_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :total_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
-  before_validation :calculate_prices
+  before_save :calculate_prices
 
   private
 
