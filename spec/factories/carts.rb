@@ -2,7 +2,7 @@ FactoryBot.define do
   factory :cart do
     status { :active }
     last_interacted_at { Time.current }
-    total_price { 100.0 }
+    total_price { 0.0 }
 
     trait :abandoned do
       status { :abandoned }

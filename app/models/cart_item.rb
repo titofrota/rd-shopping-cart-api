@@ -6,14 +6,9 @@ class CartItem < ApplicationRecord
   validates :unit_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :total_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
-  # after_initialize :set_default_quantity
   before_validation :calculate_prices
 
   private
-
-  # def set_default_quantity
-  #   self.quantity ||= 1
-  # end
 
   def calculate_prices
     self.unit_price ||= product.price if product

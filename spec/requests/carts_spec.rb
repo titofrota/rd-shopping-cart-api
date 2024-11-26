@@ -1,9 +1,9 @@
 require 'rails_helper'
 
 RSpec.describe "/carts", type: :request do
-  let(:product) { Product.create(name: "Test Product", price: 10.0) }
-  let(:new_product) { Product.create(name: "New Product", price: 20.0) }
-  let(:cart) { Cart.create }
+  let!(:product) { create(:product, name: "Test Product", price: 10.0) }
+  let!(:new_product) { create(:product, name: "New Product", price: 20.0) }
+  let!(:cart) { create(:cart) }
 
   before do
     allow_any_instance_of(CartsController).to receive(:session).and_return({ cart_id: cart.id })
@@ -28,7 +28,7 @@ RSpec.describe "/carts", type: :request do
     end
 
     context 'when the product is already in the cart' do
-      let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+      let!(:cart_item) { create(:cart_item, cart: cart, product: product, quantity: 1) }
 
       subject do
         post '/cart', params: { cart: { product_id: product.id, quantity: 2 } }, as: :json
@@ -85,9 +85,9 @@ RSpec.describe "/carts", type: :request do
 
       it 'creates a new cart and adds the product' do
         expect { subject }.to change { Cart.count }.by(1)
-      
+
         cart = Cart.last
-      
+
         expect(cart.cart_items.reload.count).to eq(1)
         expect(cart.cart_items.reload.first.product_id).to eq(new_product.id)
       end
@@ -96,7 +96,7 @@ RSpec.describe "/carts", type: :request do
 
   describe "GET /cart" do
     context 'when the cart exists' do
-      let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+      let!(:cart_item) { create(:cart_item, cart: cart, product: product, quantity: 1) }
 
       subject do
         get '/cart', as: :json
@@ -115,11 +115,11 @@ RSpec.describe "/carts", type: :request do
       subject do
         get '/cart', as: :json
       end
-    
+
       it 'returns an empty cart with zero total price' do
         subject
         json_response = JSON.parse(response.body)
-        
+
         expect(json_response['products']).to be_empty
         expect(json_response['total_price'].to_f).to eq(0.0)
       end
@@ -127,7 +127,7 @@ RSpec.describe "/carts", type: :request do
   end
 
   describe "POST /add_item" do
-    let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+    let!(:cart_item) { create(:cart_item, cart: cart, product: product, quantity: 1) }
 
     context 'when the product already is in the cart' do
       subject do
@@ -142,7 +142,7 @@ RSpec.describe "/carts", type: :request do
   end
 
   describe "DELETE /cart/:product_id" do
-    let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+    let!(:cart_item) { create(:cart_item, cart: cart, product: product, quantity: 1) }
 
     context 'when the product is in the cart' do
       subject do
@@ -175,17 +175,17 @@ RSpec.describe "/carts", type: :request do
     end
 
     context 'when removing the last item from the cart' do
-      let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
-    
+      let!(:cart_item) { create(:cart_item, cart: cart, product: product, quantity: 1) }
+
       subject do
         delete "/cart/#{product.id}", as: :json
       end
-    
+
       it 'resets total price to zero' do
         expect(cart.cart_items.exists?(product_id: product.id)).to be_truthy
-        
+
         subject
-    
+
         json_response = JSON.parse(response.body)
 
         expect(json_response['total_price'].to_f).to eq(0.0)
