@@ -73,6 +73,25 @@ RSpec.describe "/carts", type: :request do
         expect(response.status).to eq(422)
       end
     end
+
+    context 'when the cart is not found in session' do
+      before do
+        allow_any_instance_of(CartsController).to receive(:session).and_return({})
+      end
+
+      subject do
+        post '/cart', params: { cart: { product_id: new_product.id, quantity: 1 } }, as: :json
+      end
+
+      it 'creates a new cart and adds the product' do
+        expect { subject }.to change { Cart.count }.by(1)
+      
+        cart = Cart.last
+      
+        expect(cart.cart_items.reload.count).to eq(1)
+        expect(cart.cart_items.reload.first.product_id).to eq(new_product.id)
+      end
+    end
   end
 
   describe "GET /cart" do
@@ -89,6 +108,20 @@ RSpec.describe "/carts", type: :request do
 
         expect(json_response['id']).to eq(cart.id)
         expect(json_response['products'].any? { |item| item['id'] == product.id }).to be_truthy
+      end
+    end
+
+    context 'when the cart is empty' do
+      subject do
+        get '/cart', as: :json
+      end
+    
+      it 'returns an empty cart with zero total price' do
+        subject
+        json_response = JSON.parse(response.body)
+        
+        expect(json_response['products']).to be_empty
+        expect(json_response['total_price'].to_f).to eq(0.0)
       end
     end
   end
@@ -125,7 +158,41 @@ RSpec.describe "/carts", type: :request do
         expect(json_response['products'].any? { |item| item['id'] == product.id }).to be_falsey
         expect(json_response['total_price'].to_f).to eq(0.0)
       end
+    end
 
+    context 'when trying to remove a product not in the cart' do
+      subject do
+        delete "/cart/999", as: :json
+      end
+
+      it 'returns an error' do
+        subject
+        json_response = JSON.parse(response.body)
+
+        expect(json_response['error']).to eq('Product not found')
+        expect(response.status).to eq(404)
+      end
+    end
+
+    context 'when removing the last item from the cart' do
+      let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+    
+      subject do
+        delete "/cart/#{product.id}", as: :json
+      end
+    
+      it 'resets total price to zero' do
+        expect(cart.cart_items.exists?(product_id: product.id)).to be_truthy
+        
+        subject
+    
+        json_response = JSON.parse(response.body)
+
+        expect(json_response['total_price'].to_f).to eq(0.0)
+        expect(json_response['products']).to be_empty
+        expect(cart.cart_items.count).to eq(0)
+        expect(cart.total_price).to eq(0.0)
+      end
     end
   end
 end

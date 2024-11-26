@@ -1,51 +1,31 @@
 class CartsController < ApplicationController
-  before_action :set_cart, only: %i[add_product show add_item remove_item]
+  before_action :set_cart
   before_action :set_product, only: %i[add_product add_item remove_item]
-  before_action :set_cart_service, only: %i[add_product show add_item remove_item]
+  before_action :set_cart_service
 
-  # POST /cart
   def add_product
-    begin
-      @cart_service.add_product(@product, cart_params[:quantity])
-      render_cart
-    rescue CartService::UnableToSaveCartItemError => e
-      render json: { error: e.message }, status: :unprocessable_entity
-    rescue => e
-      render json: { error: 'Unable to add product to cart' }, status: :unprocessable_entity
-    end
+    @cart_service.add_product(@product, cart_params[:quantity])
+    render_cart
+  rescue CartService::UnableToSaveCartItemError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  # GET /cart
   def show
-    if @cart.persisted?
-      render_cart
-    else
-      render json: { error: 'Cart not found' }, status: :not_found
-    end
+    render_cart
   end
 
-  # POST /cart/add_item
   def add_item
-    begin
-      @cart_service.add_item(@product, cart_params[:quantity])
-      render_cart
-    rescue CartService::UnableToSaveCartItemError => e
-      render json: { error: e.message }, status: :unprocessable_entity
-    rescue => e
-      render json: { error: 'Unable to add item to cart' }, status: :unprocessable_entity
-    end
+    @cart_service.add_item(@product, cart_params[:quantity])
+    render_cart
+  rescue CartService::UnableToSaveCartItemError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  # DELETE /cart/:product_id
   def remove_item
-    begin
-      @cart_service.remove_item(@product)
-      render_cart
-    rescue CartService::ProductNotFoundError => e
-      render json: { error: e.message }, status: :not_found
-    rescue => e
-      render json: { error: 'Unable to remove product from cart' }, status: :unprocessable_entity
-    end
+    @cart_service.remove_item(@product)
+    render_cart
+  rescue CartService::ProductNotFoundError => e
+    render json: { error: e.message }, status: :not_found
   end
 
   private
@@ -60,9 +40,7 @@ class CartsController < ApplicationController
   end  
 
   def set_product
-    product_id = cart_params[:product_id] || params[:product_id]
-    @product = Product.find_by(id: product_id)
-
+    @product = Product.find_by(id: cart_params[:product_id] || params[:product_id])
     render json: { error: 'Product not found' }, status: :not_found unless @product
   end
 
