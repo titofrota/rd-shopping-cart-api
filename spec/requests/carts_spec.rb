@@ -94,8 +94,6 @@ RSpec.describe "/carts", type: :request do
   end
 
   describe "POST /add_item" do
-    # let(:cart) { Cart.create }
-    # let(:product) { Product.create(name: "Test Product", price: 10.0) }
     let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
 
     context 'when the product already is in the cart' do
@@ -107,6 +105,28 @@ RSpec.describe "/carts", type: :request do
       it 'updates the quantity of the existing item in the cart' do
         expect { subject }.to change { cart_item.reload.quantity }.by(2)
       end
+    end
+  end
+
+  describe "DELETE /cart/:product_id" do
+    let!(:cart_item) { CartItem.create(cart: cart, product: product, quantity: 1) }
+
+    context 'when the product is in the cart' do
+      subject do
+        puts cart_item.inspect
+        delete "/cart/#{product.id}", as: :json
+      end
+
+      it 'removes the product from the cart' do
+        expect { subject }.to change { cart.cart_items.count }.by(-1)
+        expect(cart.cart_items.exists?(product_id: product.id)).to be_falsey
+
+        json_response = JSON.parse(response.body)
+
+        expect(json_response['products'].any? { |item| item['id'] == product.id }).to be_falsey
+        expect(json_response['total_price'].to_f).to eq(0.0)
+      end
+
     end
   end
 end

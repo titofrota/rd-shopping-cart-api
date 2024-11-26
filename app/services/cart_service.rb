@@ -36,6 +36,20 @@ class CartService
       add_product(product, quantity)
     end
   end
+
+  def remove_item(product)
+    cart_item = @cart.items.find_by(product: product)
+
+    if cart_item
+      cart_item.destroy
+      update_cart_total_price
+
+      cart_item
+    else
+      # raise error as the product is not in the cart
+      nil
+    end
+  end
   
 
   def cart_payload
