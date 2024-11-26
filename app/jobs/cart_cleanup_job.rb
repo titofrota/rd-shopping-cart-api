@@ -9,10 +9,10 @@ class CartCleanupJob < ApplicationJob
   private
 
   def mark_carts_as_abandoned
-    Cart.inactive_for_three_hours.update_all(status: :abandoned)
+    Cart.inactive_for_three_hours.each(&:mark_as_abandoned)
   end
 
   def remove_abandoned_carts
-    Cart.abandoned_for_seven_days.destroy_all
+    Cart.abandoned_for_seven_days.each(&:remove_if_abandoned)
   end
 end

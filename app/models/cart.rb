@@ -9,14 +9,19 @@ class Cart < ApplicationRecord
   validates :total_price, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
   scope :inactive_for_three_hours, -> { where('last_interacted_at < ?', 3.hours.ago) }
-  
-  scope :abandoned_for_seven_days, -> { 
-    where('last_interacted_at < ?', 7.days.ago).where(status: :abandoned)
-  }
-  
+  scope :abandoned_for_seven_days, -> { where('last_interacted_at < ?', 7.days.ago).where(status: :abandoned) }
+
   after_initialize :set_default_total_price
 
   def set_default_total_price
-    self.total_price = 0
+    self.total_price ||= 0
+  end
+
+  def mark_as_abandoned
+    update(status: :abandoned)
+  end
+
+  def remove_if_abandoned
+    destroy if abandoned? && last_interacted_at < 7.days.ago
   end
 end
